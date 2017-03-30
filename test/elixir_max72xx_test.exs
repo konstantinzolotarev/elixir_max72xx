@@ -1,8 +1,10 @@
 defmodule ElixirMax72xxTest do
   use ExUnit.Case
+
   doctest ElixirMax72xx
 
-  test "the truth" do
-    assert 1 + 1 == 2
+  test "start_link starts a GenServer and init its state" do
+    assert {:ok, pid} = ElixirMax72xx.start_link("spidev0.0")
+    assert Process.alive?(pid)
   end
 end
