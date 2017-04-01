@@ -11,6 +11,8 @@ defmodule ElixirMax72xx do
 
   @type row_value :: 0b00000000..0b11111111
 
+  @type matrix_value :: [row_value]
+
   defmodule MatrixState do
     @moduledoc false
     defstruct (
@@ -124,6 +126,13 @@ defmodule ElixirMax72xx do
   """
   @spec set_row(row_number, row_value) :: :ok
   def set_row(row, value) when row in 1..8, do: cast({:set_row, row, value})
+
+
+  @doc """
+  
+  """
+  @spec set_matrix(matrix_value) :: :ok
+  def set_matrix(value), do: cast({:set, value})
 
   ##
   #

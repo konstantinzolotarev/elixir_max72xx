@@ -1,5 +1,5 @@
 defmodule ElixirMax72xxTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   doctest ElixirMax72xx
 
