@@ -2,6 +2,8 @@ defmodule ElixirMax72xx.Matrix do
 
   use GenServer
 
+  alias ElixirALE.SPI
+
   @op_noop        0x00
   @op_digit1      0x01
   @op_digit2      0x02
@@ -20,19 +22,18 @@ defmodule ElixirMax72xx.Matrix do
   # State for 8x8 led matrix
   defmodule MatrixState do
     @moduledoc false
-    defstruct (
-      devname: "spidev0.0",
-      leds: [
-        0b00000000,
-        0b00000000,
-        0b00000000,
-        0b00000000,
-        0b00000000,
-        0b00000000,
-        0b00000000,
-        0b00000000,
-      ]
-    )
+    defstruct devname: "spidev0.0",
+              pid: nil,
+              leds: [
+                0b00000000,
+                0b00000000,
+                0b00000000,
+                0b00000000,
+                0b00000000,
+                0b00000000,
+                0b00000000,
+                0b00000000,
+              ]
   end
 
   @type row_number :: 1..8
@@ -176,8 +177,9 @@ defmodule ElixirMax72xx.Matrix do
   ##
 
   @spec start(MatrixState) :: MatrixState
-  defp start(state) do
-
+  defp start(%MatrixState{devname: devname} = state) do
+    {:ok, pid} = SPI.start_link(devname)
+    %{state | pid: pid}
   end
 
   @spec send_command(integer, integer) :: integer
