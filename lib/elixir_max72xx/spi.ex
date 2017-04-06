@@ -8,4 +8,8 @@ defmodule ElixirMax72xx.SPI do
     end
   end
 
+  def transfer(pid, data) do
+    # Something
+  end
+
 end
