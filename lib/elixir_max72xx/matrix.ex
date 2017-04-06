@@ -1,8 +1,6 @@
 defmodule ElixirMax72xx.Matrix do
 
-  use GenServer
-
-  alias ElixirALE.SPI
+  use ElixirMax72xx.SPI
 
   @op_noop        0x00
   @op_digit1      0x01
@@ -178,7 +176,7 @@ defmodule ElixirMax72xx.Matrix do
 
   @spec start(MatrixState) :: MatrixState
   defp start(%MatrixState{devname: devname} = state) do
-    {:ok, pid} = SPI.start_link(devname)
+    {:ok, pid} = @spi.start_link(devname)
     %{state | pid: pid}
   end
 
