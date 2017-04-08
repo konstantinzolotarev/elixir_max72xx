@@ -161,12 +161,22 @@ defmodule ElixirMax72xx.Matrix do
   @spec set_row(row_number, row_value) :: :ok
   def set_row(row, value) when row in 1..8, do: cast({:set_row, row, value})
 
-
   @doc """
 
   """
   @spec set_matrix(matrix_value) :: :ok
   def set_matrix(value), do: cast({:set, value})
+
+  def state(), do: GenServer.call(__MODULE__, :state)
+
+  ##
+  #
+  # Handlers list
+  #
+  ##
+  def handle_call(:state, _from, state) do
+    {:reply, state, state}
+  end
 
   ##
   #
@@ -184,6 +194,8 @@ defmodule ElixirMax72xx.Matrix do
   defp send_command(register, value) do
 
   end
+
+  defp call(msg), do: GenServer.call(__MODULE__, msg)
 
   defp cast(msg), do: GenServer.cast(__MODULE__, msg)
 
