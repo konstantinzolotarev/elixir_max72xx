@@ -13,8 +13,8 @@ defmodule ElixirMax72xx.Matrix do
   @op_digit8      0x08
   @op_decodmode   0x09
   @op_intensity   0x0A
-  @op_intensity   0x0B
-  @op_intensity   0x0C
+  @op_scanlimit   0x0B
+  @op_shutdown    0x0C
   @op_displaytest 0x0F
 
   # State for 8x8 led matrix
@@ -71,8 +71,8 @@ defmodule ElixirMax72xx.Matrix do
   ```
   """
   @spec shutdown(boolean) :: :ok
-  def shutdown(true), do: cast({:shutdown, 0x00})
-  def shutdown(false), do: cast({:shutdown, 0x01})
+  def shutdown(true), do: call({:shutdown, 0x00})
+  def shutdown(false), do: call({:shutdown, 0x01})
 
   @doc """
   Enable/disable matrix test feature.
@@ -86,8 +86,8 @@ defmodule ElixirMax72xx.Matrix do
   ```
   """
   @spec test(enable :: boolean) :: :ok
-  def test(true), do: cast({:test, 0x01})
-  def test(false), do: cast({:test, 0x00})
+  def test(true), do: call({:test, 0x01})
+  def test(false), do: call({:test, 0x00})
 
   @doc """
   Clear matrix
@@ -99,7 +99,7 @@ defmodule ElixirMax72xx.Matrix do
   ```
   """
   @spec clear() :: :ok
-  def clear(), do: cast({:clean})
+  def clear(), do: call({:clean})
 
   @doc """
   Set scanlimit for device
@@ -111,7 +111,7 @@ defmodule ElixirMax72xx.Matrix do
   ```
   """
   @spec set_scanlimit(integer) :: :ok
-  def set_scanlimit(value), do: cast({:set_scanlimit, value})
+  def set_scanlimit(value), do: call({:set_scanlimit, value})
 
   @doc """
   Set decode-mode for matrix
@@ -123,9 +123,7 @@ defmodule ElixirMax72xx.Matrix do
   ```
   """
   @spec set_decodemod(0x00 | 0x01 | 0x0F | 0xFF) :: :ok
-  def set_decodemod(value) do
-
-  end
+  def set_decodemod(value), do: call({:set_decodemod, value})
 
   @doc """
   Will clear given row
@@ -142,7 +140,7 @@ defmodule ElixirMax72xx.Matrix do
   ```
   """
   @spec clear_row(row_number) :: :ok
-  def clear_row(row) when row in 1..8, do: cast({:clear_row, row})
+  def clear_row(row) when row in 1..8, do: call({:clear_row, row})
 
 
   @doc """
@@ -159,15 +157,44 @@ defmodule ElixirMax72xx.Matrix do
   ```
   """
   @spec set_row(row_number, row_value) :: :ok
-  def set_row(row, value) when row in 1..8, do: cast({:set_row, row, value})
+  def set_row(row, value) when row in 1..8, do: call({:set_row, row, value})
 
   @doc """
+  Sets matrix values
 
+  Example:
+  ```elixir
+  iex(1)> matrix_value = [
+  ...(1)> 0b00000000,
+  ...(1)> 0b00000000,
+  ...(1)> 0b00000000,
+  ...(1)> 0b00010000,
+  ...(1)> 0b00000000,
+  ...(1)> 0b00000000,
+  ...(1)> 0b00000000,
+  ...(1)> 0b00000000
+  ...(1)> ]
+  [0, 0, 0, 0, 0, 0, 0, 0]
+  iex(2)> ElixirMax72xx.set_matrix(matrix_value)
+  :ok
+  ```
   """
   @spec set_matrix(matrix_value) :: :ok
-  def set_matrix(value), do: cast({:set, value})
+  def set_matrix(value), do: call({:set, value})
 
-  def state(), do: GenServer.call(__MODULE__, :state)
+
+  @doc """
+  Get current state
+
+  Example
+  ```elixir
+  iex(1)> ElixirMax72xx.Matrix.state()
+  %ElixirMax72xx.Matrix.MatrixState{devname: "spidev0.0",
+   leds: [0, 0, 0, 0, 0, 0, 0, 0], pid: #PID<0.793.0>}
+  ```
+  """
+  @spec state() :: %MatrixState{}
+  def state(), do: call(:state)
 
   ##
   #
@@ -176,6 +203,11 @@ defmodule ElixirMax72xx.Matrix do
   ##
   def handle_call(:state, _from, state) do
     {:reply, state, state}
+  end
+
+  def handle_call({:shutdown, value}, _from, %{pid: pid} = state) do
+    @spi.transfer(pid, <<@op_shutdown, value>>)
+    {:reply, :ok, state}
   end
 
   ##
