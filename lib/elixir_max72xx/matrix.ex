@@ -2,15 +2,15 @@ defmodule ElixirMax72xx.Matrix do
 
   use ElixirMax72xx.SPI
 
-  @op_noop        0x00
-  @op_digit1      0x01
-  @op_digit2      0x02
-  @op_digit3      0x03
-  @op_digit4      0x04
-  @op_digit5      0x05
-  @op_digit6      0x06
-  @op_digit7      0x07
-  @op_digit8      0x08
+  # @op_noop        0x00
+  # @op_digit1      0x01
+  # @op_digit2      0x02
+  # @op_digit3      0x03
+  # @op_digit4      0x04
+  # @op_digit5      0x05
+  # @op_digit6      0x06
+  # @op_digit7      0x07
+  # @op_digit8      0x08
   @op_decodmode   0x09
   @op_intensity   0x0A
   @op_scanlimit   0x0B
@@ -48,7 +48,7 @@ defmodule ElixirMax72xx.Matrix do
    * `opts` is a keyword list to configure the module
   """
   @spec start_link(binary, list) :: {:ok, pid}
-  def start_link(devname \\ "spidev0.0", opts \\ []) do
+  def start_link(devname \\ "spidev0.0", _opts \\ []) do
     state = %MatrixState{devname: devname}
     GenServer.start_link(__MODULE__, state, name: __MODULE__)
   end
@@ -124,6 +124,18 @@ defmodule ElixirMax72xx.Matrix do
   """
   @spec set_decodemod(0x00 | 0x01 | 0x0F | 0xFF) :: :ok
   def set_decodemod(value), do: call({:set_decodemod, value})
+
+  @doc """
+  Set intensity for matrix
+
+  Example:
+  ```elixir
+  iex> ElixirMax72xx.set_intensity(0x0F)
+  :ok
+  ```
+  """
+  @spec set_intensity(integer) :: :ok
+  def set_intensity(value), do: call({:set_intensity, value})
 
   @doc """
   Will clear given row
@@ -215,7 +227,7 @@ defmodule ElixirMax72xx.Matrix do
     {:reply, :ok, state}
   end
 
-  def handle_call({:clean}, _from, %{pid: pid} = state) do
+  def handle_call({:clean}, _from, state) do
     # iterate through rows
     {:reply, :ok, state}
   end
@@ -225,12 +237,17 @@ defmodule ElixirMax72xx.Matrix do
     {:reply, :ok, state}
   end
 
+  def handle_call({:set_intensity, value}, _from, %{pid: pid} = state) do
+    send_command(pid, <<@op_intensity, value>>)
+    {:reply, :ok, state}
+  end
+
   def handle_call({:set_decodemod, value}, _from, %{pid: pid} = state) do
     send_command(pid, <<@op_decodmode, value>>)
     {:reply, :ok, state}
   end
 
-  def handle_call({:clear_row, row}, _from, %{pid: pid} = state) do
+  def handle_call({:clear_row, row}, _from, state) do
     state = set_row({row, 0b00000000}, state)
     {:reply, :ok, state}
   end
@@ -275,8 +292,6 @@ defmodule ElixirMax72xx.Matrix do
 
   defp call(msg), do: GenServer.call(__MODULE__, msg)
 
-  defp cast(msg), do: GenServer.cast(__MODULE__, msg)
-
-  defp stop(msg), do: GenServer.stop(__MODULE__, msg)
+  # defp stop(msg), do: GenServer.stop(__MODULE__, msg)
 
 end
