@@ -156,8 +156,8 @@ defmodule ElixirMax72xx.Matrix do
   :ok
   ```
   """
-  @spec set_row(row_number, row_value) :: :ok
-  def set_row(row, value) when row in 1..8, do: call({:set_row, row, value})
+  @spec set_row({row_number, row_value}) :: :ok
+  def set_row({row, value}) when row in 1..8, do: call({:set_row, row, value})
 
   @doc """
   Sets matrix values
@@ -231,12 +231,20 @@ defmodule ElixirMax72xx.Matrix do
   end
 
   def handle_call({:clear_row, row}, _from, %{pid: pid} = state) do
-    state = set_row(row, 0b00000000, state)
+    state = set_row({row, 0b00000000}, state)
     {:reply, :ok, state}
   end
 
   def handle_call({:set_row, row, value}, _from, state) do
-    state = set_row(row, value, state)
+    state = set_row({row, value}, state)
+    {:reply, :ok, state}
+  end
+
+  def handle_call({:set, value}, _from, state) do
+    state = value
+    |> Enum.with_index
+    |> Enum.each(&set_row(&1, state))
+
     {:reply, :ok, state}
   end
 
@@ -257,7 +265,7 @@ defmodule ElixirMax72xx.Matrix do
     @spi.transfer(pid, value)
   end
 
-  defp set_row(row, value, %{pid: pid} = state) do
+  defp set_row({row, value}, %{pid: pid} = state) do
     leds = state.leds
       |> List.replace_at(row, value)
 
