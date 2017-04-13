@@ -231,25 +231,12 @@ defmodule ElixirMax72xx.Matrix do
   end
 
   def handle_call({:clear_row, row}, _from, %{pid: pid} = state) do
-    empty_row = 0b00000000
-    leds = state.leds
-      |> List.replace_at(row, empty_row)
-
-    state = %MatrixState{state | leds: leds}
-
-    send_command(pid, <<row, empty_row>>)
+    state = set_row(row, 0b00000000, state)
     {:reply, :ok, state}
   end
 
-  def handle_call({:set_row, row, value}, _from, %{pid: pid} = state) do
-
-    leds = state.leds
-      |> List.replace_at(row, value)
-
-    state = %MatrixState{state | leds: leds}
-
-    send_command(pid, <<row, value>>)
-
+  def handle_call({:set_row, row, value}, _from, state) do
+    state = set_row(row, value, state)
     {:reply, :ok, state}
   end
 
@@ -268,6 +255,14 @@ defmodule ElixirMax72xx.Matrix do
   @spec send_command(pid, integer) :: integer
   defp send_command(pid, value) do
     @spi.transfer(pid, value)
+  end
+
+  defp set_row(row, value, %{pid: pid} = state) do
+    leds = state.leds
+      |> List.replace_at(row, value)
+
+    send_command(pid, <<row, value>>)
+    %MatrixState{state | leds: leds}
   end
 
   defp call(msg), do: GenServer.call(__MODULE__, msg)
