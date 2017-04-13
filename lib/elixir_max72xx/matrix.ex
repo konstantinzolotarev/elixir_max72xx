@@ -206,7 +206,50 @@ defmodule ElixirMax72xx.Matrix do
   end
 
   def handle_call({:shutdown, value}, _from, %{pid: pid} = state) do
-    @spi.transfer(pid, <<@op_shutdown, value>>)
+    send_command(pid, <<@op_shutdown, value>>)
+    {:reply, :ok, state}
+  end
+
+  def handle_call({:test, value}, _from, %{pid: pid} = state) do
+    send_command(pid, <<@op_displaytest, value>>)
+    {:reply, :ok, state}
+  end
+
+  def handle_call({:clean}, _from, %{pid: pid} = state) do
+    # iterate through rows
+    {:reply, :ok, state}
+  end
+
+  def handle_call({:set_scanlimit, value}, _from, %{pid: pid} = state) do
+    send_command(pid, <<@op_scanlimit, value>>)
+    {:reply, :ok, state}
+  end
+
+  def handle_call({:set_decodemod, value}, _from, %{pid: pid} = state) do
+    send_command(pid, <<@op_decodmode, value>>)
+    {:reply, :ok, state}
+  end
+
+  def handle_call({:clear_row, row}, _from, %{pid: pid} = state) do
+    empty_row = 0b00000000
+    leds = state.leds
+      |> List.replace_at(row, empty_row)
+
+    state = %MatrixState{state | leds: leds}
+
+    send_command(pid, <<row, empty_row>>)
+    {:reply, :ok, state}
+  end
+
+  def handle_call({:set_row, row, value}, _from, %{pid: pid} = state) do
+
+    leds = state.leds
+      |> List.replace_at(row, value)
+
+    state = %MatrixState{state | leds: leds}
+
+    send_command(pid, <<row, value>>)
+
     {:reply, :ok, state}
   end
 
@@ -222,9 +265,9 @@ defmodule ElixirMax72xx.Matrix do
     %{state | pid: pid}
   end
 
-  @spec send_command(integer, integer) :: integer
-  defp send_command(register, value) do
-
+  @spec send_command(pid, integer) :: integer
+  defp send_command(pid, value) do
+    @spi.transfer(pid, value)
   end
 
   defp call(msg), do: GenServer.call(__MODULE__, msg)
