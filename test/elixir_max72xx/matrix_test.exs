@@ -9,8 +9,9 @@ defmodule ElixirMax72xx.MatrixTest do
   end
 
   test "check state" do
-    %{pid: pid} = Matrix.state()
+    %{pid: pid, leds: leds} = Matrix.state()
     assert Process.alive?(pid)
+    assert length(leds) == 8
   end
 
 

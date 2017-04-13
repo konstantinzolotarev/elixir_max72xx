@@ -167,8 +167,8 @@ defmodule ElixirMax72xx.Matrix do
   :ok
   ```
   """
-  @spec set_row({row_number, row_value}) :: :ok
-  def set_row({row, value}) when row in 1..8, do: call({:set_row, row, value})
+  @spec set_row(row_number, row_value) :: :ok
+  def set_row(row, value) when row in 1..8, do: call({:set_row, row, value})
 
   @doc """
   Sets matrix values
@@ -226,10 +226,10 @@ defmodule ElixirMax72xx.Matrix do
     {:reply, :ok, state}
   end
 
-  def handle_call({:clean}, _from, state) do
-    state = 1..8
-    |> Enum.each(&set_row({&1, 0b00000000}, state))
-    {:reply, :ok, state}
+  def handle_call({:clean}, _from, %{pid: pid} = state) do
+    leds = 1..8
+    |> Enum.map(&send_row({&1, 0b00000000}, pid))
+    {:reply, :ok, %MatrixState{state | leds: leds}}
   end
 
   def handle_call({:set_scanlimit, value}, _from, %{pid: pid} = state) do
@@ -247,22 +247,26 @@ defmodule ElixirMax72xx.Matrix do
     {:reply, :ok, state}
   end
 
-  def handle_call({:clear_row, row}, _from, state) do
-    state = set_row({row, 0b00000000}, state)
-    {:reply, :ok, state}
+  def handle_call({:clear_row, row}, _from, %{pid: pid, leds: leds} = state) do
+    send_row({row, 0b00000000}, pid)
+    leds = List.replace_at(leds, row, 0b00000000)
+
+    {:reply, :ok, %MatrixState{state | leds: leds}}
   end
 
-  def handle_call({:set_row, row, value}, _from, state) do
-    state = set_row({row, value}, state)
-    {:reply, :ok, state}
+  def handle_call({:set_row, row, value}, _from, %{pid: pid, leds: leds} = state) do
+    send_row({row, value}, pid)
+    leds = List.replace_at(leds, row, value)
+
+    {:reply, :ok, %MatrixState{state | leds: leds}}
   end
 
-  def handle_call({:set, value}, _from, state) do
-    state = value
+  def handle_call({:set, value}, _from, %{pid: pid} = state) do
+    leds = value
     |> Enum.with_index
-    |> Enum.each(&set_row(&1, state))
+    |> Enum.map(&set_row(&1, pid))
 
-    {:reply, :ok, state}
+    {:reply, :ok, %MatrixState{state | leds: leds}}
   end
 
   ##
@@ -287,12 +291,10 @@ defmodule ElixirMax72xx.Matrix do
     @spi.transfer(pid, value)
   end
 
-  defp set_row({row, value}, %{pid: pid} = state) do
-    leds = state.leds
-      |> List.replace_at(row, value)
-
+  @spec send_row({integer, integer}, pid) :: integer
+  def send_row({row, value}, pid) do
     send_command(pid, <<row, value>>)
-    %MatrixState{state | leds: leds}
+    value
   end
 
   defp call(msg), do: GenServer.call(__MODULE__, msg)
