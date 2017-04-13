@@ -56,8 +56,7 @@ defmodule ElixirMax72xx.Matrix do
   @doc false
   @spec init(term) :: {:ok, term}
   def init(state) do
-    state = start(state)
-    {:ok, state}
+    {:ok, start(state)}
   end
 
   @doc """
@@ -228,7 +227,8 @@ defmodule ElixirMax72xx.Matrix do
   end
 
   def handle_call({:clean}, _from, state) do
-    # iterate through rows
+    state = 1..8
+    |> Enum.each(&set_row({&1, 0b00000000}, state))
     {:reply, :ok, state}
   end
 
@@ -274,6 +274,11 @@ defmodule ElixirMax72xx.Matrix do
   @spec start(MatrixState) :: MatrixState
   defp start(%MatrixState{devname: devname} = state) do
     {:ok, pid} = @spi.start_link(devname)
+
+    # set displaytest 0
+    # set scan limit 7
+    # set decodemode 0
+    #
     %{state | pid: pid}
   end
 
