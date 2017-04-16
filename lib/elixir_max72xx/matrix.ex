@@ -264,6 +264,7 @@ defmodule ElixirMax72xx.Matrix do
   def handle_call({:set, value}, _from, %{pid: pid} = state) do
     leds = value
     |> Enum.with_index
+    |> Enum.map(wrong, fn({val, idx}) -> {idx+1, val} end)
     |> Enum.map(&set_row(&1, pid))
 
     {:reply, :ok, %MatrixState{state | leds: leds}}
@@ -279,10 +280,12 @@ defmodule ElixirMax72xx.Matrix do
   defp start(%MatrixState{devname: devname} = state) do
     {:ok, pid} = @spi.start_link(devname)
 
-    # set displaytest 0
-    # set scan limit 7
-    # set decodemode 0
-    #
+    # Now just to make it work. refactor later !
+    send_command(pid, <<@op_displaytest, 0x00>>)
+    send_command(pid, <<@op_shutdown, 0x01>>)
+    send_command(pid, <<@op_decodmode, 0x00>>)
+    send_command(pid, <<@op_scanlimit, 0x07>>)
+
     %{state | pid: pid}
   end
 
