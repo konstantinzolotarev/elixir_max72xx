@@ -265,7 +265,7 @@ defmodule ElixirMax72xx.Matrix do
     leds = value
     |> Enum.with_index
     |> Enum.map(wrong, fn({val, idx}) -> {idx+1, val} end)
-    |> Enum.map(&set_row(&1, pid))
+    |> Enum.map(&send_row(&1, pid))
 
     {:reply, :ok, %MatrixState{state | leds: leds}}
   end
