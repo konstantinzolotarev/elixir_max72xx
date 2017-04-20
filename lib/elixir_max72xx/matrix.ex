@@ -280,11 +280,12 @@ defmodule ElixirMax72xx.Matrix do
   defp start(%MatrixState{devname: devname} = state) do
     {:ok, pid} = @spi.start_link(devname)
 
+    Process.sleep(1000)
     # Now just to make it work. refactor later !
     send_command(pid, <<@op_displaytest, 0x00>>)
     send_command(pid, <<@op_shutdown, 0x01>>)
     send_command(pid, <<@op_decodmode, 0x00>>)
-    send_command(pid, <<@op_scanlimit, 0x07>>)
+    send_command(pid, <<@op_scanlimit, 0x09>>)
 
     %{state | pid: pid}
   end
