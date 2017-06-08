@@ -249,14 +249,14 @@ defmodule ElixirMax72xx.Matrix do
 
   def handle_call({:clear_row, row}, _from, %{pid: pid, leds: leds} = state) do
     send_row({row, 0b00000000}, pid)
-    leds = List.replace_at(leds, row, 0b00000000)
+    leds = List.replace_at(leds, row - 1, 0b00000000)
 
     {:reply, :ok, %MatrixState{state | leds: leds}}
   end
 
   def handle_call({:set_row, row, value}, _from, %{pid: pid, leds: leds} = state) do
     send_row({row, value}, pid)
-    leds = List.replace_at(leds, row, value)
+    leds = List.replace_at(leds, row - 1, value)
 
     {:reply, :ok, %MatrixState{state | leds: leds}}
   end
@@ -264,7 +264,7 @@ defmodule ElixirMax72xx.Matrix do
   def handle_call({:set, value}, _from, %{pid: pid} = state) do
     leds = value
     |> Enum.with_index
-    |> Enum.map(fn({val, idx}) -> {idx+1, val} end)
+    |> Enum.map(fn({val, idx}) -> {idx + 1, val} end)
     |> Enum.map(&send_row(&1, pid))
 
     {:reply, :ok, %MatrixState{state | leds: leds}}
