@@ -8,11 +8,11 @@ defmodule ElixirMax72xx.SPI do
     end
   end
 
-  def start_link(devname, spi_opts \\ [], opts \\ []) do
+  def start_link(_devname, _spi_opts \\ [], opts \\ []) do
     GenServer.start_link(__MODULE__, [], opts)
   end
 
-  def transfer(pid, data) do
+  def transfer(_pid, _data) do
     <<0, 0>>
   end
 

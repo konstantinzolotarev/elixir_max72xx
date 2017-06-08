@@ -159,7 +159,7 @@ defmodule ElixirMax72xx.Matrix do
 
   Parameters:
    * `row` - row number 1..8
-   * `value` - value of row lights `0b00110011
+   * `value` - value of row lights `0b00110011`
 
   Example:
   ```elixir
