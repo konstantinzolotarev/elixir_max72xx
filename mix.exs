@@ -3,7 +3,7 @@ defmodule ElixirMax72xx.Mixfile do
 
   def project do
     [app: :elixir_max72xx,
-     version: "0.1.0",
+     version: "0.1.1",
      elixir: "~> 1.4",
      description: description(),
      package: package(),
