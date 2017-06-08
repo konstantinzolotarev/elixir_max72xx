@@ -212,41 +212,49 @@ defmodule ElixirMax72xx.Matrix do
   # Handlers list
   #
   ##
+  @doc false
   def handle_call(:state, _from, state) do
     {:reply, state, state}
   end
 
+  @doc false
   def handle_call({:shutdown, value}, _from, %{pid: pid} = state) do
     send_command(pid, <<@op_shutdown, value>>)
     {:reply, :ok, state}
   end
 
+  @doc false
   def handle_call({:test, value}, _from, %{pid: pid} = state) do
     send_command(pid, <<@op_displaytest, value>>)
     {:reply, :ok, state}
   end
 
+  @doc false
   def handle_call({:clean}, _from, %{pid: pid} = state) do
     leds = 1..8
     |> Enum.map(&send_row({&1, 0b00000000}, pid))
     {:reply, :ok, %MatrixState{state | leds: leds}}
   end
 
+  @doc false
   def handle_call({:set_scanlimit, value}, _from, %{pid: pid} = state) do
     send_command(pid, <<@op_scanlimit, value>>)
     {:reply, :ok, state}
   end
 
+  @doc false
   def handle_call({:set_intensity, value}, _from, %{pid: pid} = state) do
     send_command(pid, <<@op_intensity, value>>)
     {:reply, :ok, state}
   end
 
+  @doc false
   def handle_call({:set_decodemod, value}, _from, %{pid: pid} = state) do
     send_command(pid, <<@op_decodmode, value>>)
     {:reply, :ok, state}
   end
 
+  @doc false
   def handle_call({:clear_row, row}, _from, %{pid: pid, leds: leds} = state) do
     send_row({row, 0b00000000}, pid)
     leds = List.replace_at(leds, row - 1, 0b00000000)
@@ -254,6 +262,7 @@ defmodule ElixirMax72xx.Matrix do
     {:reply, :ok, %MatrixState{state | leds: leds}}
   end
 
+  @doc false
   def handle_call({:set_row, row, value}, _from, %{pid: pid, leds: leds} = state) do
     send_row({row, value}, pid)
     leds = List.replace_at(leds, row - 1, value)
@@ -261,6 +270,7 @@ defmodule ElixirMax72xx.Matrix do
     {:reply, :ok, %MatrixState{state | leds: leds}}
   end
 
+  @doc false
   def handle_call({:set, value}, _from, %{pid: pid} = state) do
     leds = value
     |> Enum.with_index
@@ -290,13 +300,15 @@ defmodule ElixirMax72xx.Matrix do
     %{state | pid: pid}
   end
 
+  @doc false
   @spec send_command(pid, integer) :: integer
   defp send_command(pid, value) do
     @spi.transfer(pid, value)
   end
 
+  @doc false
   @spec send_row({integer, integer}, pid) :: integer
-  def send_row({row, value}, pid) do
+  defp send_row({row, value}, pid) do
     send_command(pid, <<row, value>>)
     value
   end
