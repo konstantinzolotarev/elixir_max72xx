@@ -42,7 +42,7 @@ defmodule ElixirMax72xx.Mixfile do
     [
       files: ["lib", "mix.exs", "README*", "LICENSE*"],
       maintainers: ["Konstantin Zolotarev"],
-      licenses: ["Apache-2.0"],
+      licenses: ["Apache 2.0"],
       links: %{"GitHub" => "https://github.com/konstantinzolotarev/elixir_max72xx"}
     ]
   end
